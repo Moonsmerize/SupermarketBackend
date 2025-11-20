@@ -1,27 +1,81 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SupermercadoBackend.Data;
+using System.Text;
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("NuevaPolitica", app =>
+    {
+        app.AllowAnyOrigin() 
+           .AllowAnyHeader()
+           .AllowAnyMethod();
+    });
+});
+
 
 builder.Services.AddDbContext<SupermarketContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-var app = builder.Build();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
 
-if (app.Environment.IsDevelopment())
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
 {
-    app.UseSwagger();   
-    app.UseSwaggerUI();
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Supermercado API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Jwt Authorization header using the Bearer scheme",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            new string[] {}
+        }
+    });
+});
+
+var builderApp = builder.Build();
+
+if (builderApp.Environment.IsDevelopment())
+{
+    builderApp.UseSwagger();
+    builderApp.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+builderApp.UseHttpsRedirection();
 
-app.UseAuthorization();
+builderApp.UseCors("NuevaPolitica");
 
-app.MapControllers();
+builderApp.UseAuthentication();
+builderApp.UseAuthorization();
 
-app.Run();
+builderApp.MapControllers();
+
+builderApp.Run();
