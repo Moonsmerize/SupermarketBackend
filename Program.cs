@@ -4,7 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SupermercadoBackend.Data;
 using System.Text;
-
+// asdf
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
         app.AllowAnyOrigin() 
            .AllowAnyHeader()
            .AllowAnyMethod();
-    });
+    })
 });
 
 
