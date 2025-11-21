@@ -47,7 +47,7 @@ namespace SupermercadoBackend.Controllers
             _context.Usuarios.Add(nuevoUsuario);
             await _context.SaveChangesAsync();
 
-            return Ok("Usuario registrado exitosamente");
+            return Ok(new { mensaje = "Usuario registrado exitosamente" });
         }
 
         [HttpPost("login")]
