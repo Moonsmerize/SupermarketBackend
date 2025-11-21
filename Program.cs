@@ -4,7 +4,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SupermercadoBackend.Data;
 using System.Text;
-// asdf
+
+
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,12 +14,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("NuevaPolitica", app =>
     {
-        app.AllowAnyOrigin() 
+        app.AllowAnyOrigin()
            .AllowAnyHeader()
            .AllowAnyMethod();
-    })
+    });
 });
-
 
 builder.Services.AddDbContext<SupermarketContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -61,21 +61,22 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-var builderApp = builder.Build();
+var app = builder.Build();
 
-if (builderApp.Environment.IsDevelopment())
+
+if (app.Environment.IsDevelopment())
 {
-    builderApp.UseSwagger();
-    builderApp.UseSwaggerUI();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-builderApp.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
-builderApp.UseCors("NuevaPolitica");
+app.UseCors("NuevaPolitica");
 
-builderApp.UseAuthentication();
-builderApp.UseAuthorization();
+app.UseAuthentication(); 
+app.UseAuthorization(); 
 
-builderApp.MapControllers();
+app.MapControllers();
 
-builderApp.Run();
+app.Run();
